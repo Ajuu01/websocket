@@ -1,6 +1,7 @@
 import { Socket } from "socket.io";
 import { getSocketIo } from "../../server";
 import todoModel from "./todoModel";
+import { Status } from "./todoTypes";
 
 
 class Todo{
@@ -10,6 +11,7 @@ class Todo{
             console.log("New client connected!!")
             socket.on("addTodo",(data)=>this.handleAddTodo(socket,data))
             socket.on("deleteTodo",(data)=>this.handleDeleteTodo(socket,data))
+            socket.on("updateTodoStatus",(data)=>this.handleUpdateTodoStatus(socket,data))
         })
     }
 
@@ -21,7 +23,7 @@ class Todo{
                 deadline,
                 status
             })
-            const todos=await todoModel.find()
+            const todos=await todoModel.find({status:Status.Pending})
             socket.emit("todos_updated",{
                 status:"Success",
                 data:todos
@@ -45,7 +47,7 @@ class Todo{
                 })
                 return;
             }
-            const todos=await todoModel.find()
+            const todos=await todoModel.find({status:Status.Pending})
             socket.emit("todos_updated",{
                 status:"Success",
                 todos
@@ -56,6 +58,31 @@ class Todo{
                 error
             })
         }
+    }
+
+    private async handleUpdateTodoStatus(socket:Socket,data:{id:String,status:Status}){
+        try{
+            const {id,status}=data
+            const todo=await todoModel.findByIdAndUpdate(id,{status},{new:true})
+            if(!todo){
+                socket.emit("todos_response",{
+                    status:"error",
+                    message:"Todo not found"
+                })
+                return;
+            }
+            const todos=await todoModel.find({status:Status.Pending})
+            socket.emit("todos_updated",{
+                status:"success",
+                data:todos
+            })
+        }catch(error){
+            socket.emit("todos_response",{
+                status:"error",
+                error
+            })
+        }
+
     }
 }
 
