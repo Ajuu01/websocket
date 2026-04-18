@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nodemon server.ts"
   },
-  "author": "Manish Basnet",
+  "author": "Ajuna Rai",
   "license": "ISC",
   "description": "",
   "dependencies": {

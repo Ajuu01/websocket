@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="max-w-md mx-auto bg-white shadow-lg rounded-lg overflow-hidden mt-16">
+        <div class="px-4 py-2">
+            <h1 class="text-gray-800 font-bold text-2xl uppercase">To-Do List</h1>
+        </div>
+        <form class="w-full max-w-sm mx-auto px-4 py-2" onsubmit="addTodo();return false;">
+            <div class="flex items-center border-b-2 border-teal-500 py-2">
+                <input
+                    id="newTask"
+                    class="appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
+                    type="text" placeholder="Add a task">
+                <button
+                    class="flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded"
+                    type="submit">
+                    Add
+                </button>
+            </div>
+        </form>
+        <ul id="todoList" class="divide-y divide-gray-200 px-4">
+          
+        </ul>
+    </div>
+    <script>
+        const socket = io()
+        socket.emit("fetchTodos")
+        socket.on("todos_updated",(data)=>{
+            if(data.status === "success"){
+                updateTodoList(data.data)
+            }else{
+                console.log("error vayo hai")
+            }
+        })
+
+        function updateTodoList(todos){
+            const todoList = document.getElementById("todoList")
+            todoList.innerHTML = ''
+            todos.forEach(todo=>{
+                const listItem = `
+                <li class="py-4 flex items-center justify-between" data-id="${todo._id}">
+                <div class="flex items-center">
+                    <input id="todo_${todo._id}" name="todo_${todo._id}" type="checkbox"
+                        class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded" onchange="toogleStatus('${todo._id}')" >
+                    <label for="todo_${todo._id}" class="ml-3 block text-gray-900">
+                        <span class="text-lg font-medium">${todo.task}</span>
+                        <span class="text-sm font-light text-gray-500">Due on ${todo.deadline}</span>
+                    </label>
+                    
+                </div>
+                <button onclick="deleteTodo('${todo._id}')">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24"><path d="M0 0h24v24H0z" fill="none"/><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                </button>
+            </li>
+                `
+                todoList.insertAdjacentHTML('beforeend',listItem)
+            })
+        }
+
+        function addTodo(){
+            const taskValue = document.getElementById("newTask")
+            const task = taskValue.value
+            socket.emit("addTodo",{
+                task : task , 
+                deadline : new Date().toLocaleDateString(), 
+                status : "pending"
+            })
+            taskValue.value = ""
+        }
+        function toogleStatus(todoId){
+            socket.emit("updateTodoStatus",{
+                id : todoId, 
+                status : "completed"
+            })
+        }
+        function deleteTodo(todoId){
+            socket.emit("deleteTodo",{id : todoId}); 
+            // const todoElement = document.querySelector(`[data-id="${todoId}"]`)
+            // if(todoElement){
+            //     todoElement.remove()
+            // }
+
+        }
+    </script>
+</body>
+</html>

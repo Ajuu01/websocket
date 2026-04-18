@@ -4,7 +4,10 @@ import { ITodo, Status } from "./todoTypes"
 const Schema=mongoose.Schema
 
 const todoSchema=new Schema<ITodo>({
-    task:String,
+    task:{
+        type:String,
+        required:true
+    },
     deadline:String,
     status:{
         type:String,

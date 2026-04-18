@@ -12,6 +12,7 @@ class Todo{
             socket.on("addTodo",(data)=>this.handleAddTodo(socket,data))
             socket.on("deleteTodo",(data)=>this.handleDeleteTodo(socket,data))
             socket.on("updateTodoStatus",(data)=>this.handleUpdateTodoStatus(socket,data))
+            socket.on("fetchTodo",(data)=>this.handleFetchTodo(socket))
         })
     }
 
@@ -25,7 +26,7 @@ class Todo{
             })
             const todos=await todoModel.find({status:Status.Pending})
             socket.emit("todos_updated",{
-                status:"Success",
+                status:"success",
                 data:todos
             })
         }catch(error){
@@ -49,7 +50,7 @@ class Todo{
             }
             const todos=await todoModel.find({status:Status.Pending})
             socket.emit("todos_updated",{
-                status:"Success",
+                status:"success",
                 todos
             })
         }catch(error){
@@ -83,6 +84,20 @@ class Todo{
             })
         }
 
+    }
+    private async handleFetchTodo(socket:Socket){
+        try{
+            const todos=todoModel.find({status:Status.Pending})
+            socket.emit("todos_updated",{
+                status:"success",
+                data:todos
+            })
+        }catch(error){
+            socket.emit("todos_response",{
+                status:"error",
+                error
+            })
+        }
     }
 }
 
